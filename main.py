@@ -93,7 +93,28 @@ def main():
     season_start_date = date(2024, 3, 11)
     season_end_date = date(2024, 5, 10)
 
-    Scheduler.schedule_round_robin(teams, permit_db, season_start_date, season_end_date)
+    schedule = Scheduler.schedule_round_robin(
+        "Interscholastic Division Schedule",
+        teams,
+        permit_db,
+        season_start_date,
+        season_end_date)
+
+    # games_for_team = schedule.get_schedule_for_team(teams[5])
+    #
+    # for week, game_list in games_for_team.items():
+    #     print(f"Games in week #{week}")
+    #     for index, game in enumerate(game_list):
+    #         print(f"\t{index + 1}. {game}")
+    #
+    #     print("=========================")
+
+    for target_week in range(0, 10):
+        print(f"Games in week #{target_week}:")
+
+        games_in_week = schedule.get_games_for_week(target_week)
+        for game in games_in_week:
+            print(f"\t{game}")
 
 
 main()

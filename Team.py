@@ -26,7 +26,10 @@ class Team:
         self.blackout_dates = blackout_dates
 
     def __repr__(self):
-        return "{team_name}".format(team_name=self.name)
+        return f"{self.name}"
+
+    def __hash__(self):
+        return f"{self.name}".__hash__()
 
     def _is_strictly_unavailable(self, dt):
         given_date = dt.date()

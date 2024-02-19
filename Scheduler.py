@@ -1,10 +1,11 @@
-from Game import Game
 from PermitDB import PermitDB
 from Team import Team
+from WeeklySchedule import WeeklySchedule
 
 import itertools
+import random
 
-from typing import List, Tuple, Dict
+from typing import List, Tuple
 from datetime import datetime, timedelta
 
 
@@ -13,10 +14,21 @@ class Scheduler:
         pass
 
     @staticmethod
-    def schedule_round_robin(teams: List[Team], permit_db: PermitDB, start_date, end_date):
-        games_by_team_by_week: Dict[str, Dict[int, Game]] = {}
+    def schedule_round_robin(schedule_name: str, teams: List[Team], permit_db: PermitDB, start_date, end_date):
+
+        def randomize_tuple_elements(tuple_list):
+            randomized_list = []
+            for tup in tuple_list:
+                if random.choice([True, False]):
+                    randomized_list.append(tup)  # Keep the order
+                else:
+                    randomized_list.append((tup[1], tup[0]))  # Swap the order
+            return randomized_list
+
+        schedule = WeeklySchedule(schedule_name, start_date, end_date, 2)
 
         matchups: List[Tuple[Team, Team]] = list(itertools.combinations(teams, 2))
+        matchups = randomize_tuple_elements(matchups)
 
         current_date = start_date
         while current_date <= end_date:
@@ -29,11 +41,14 @@ class Scheduler:
 
                     scheduling_criteria = [
                         matchup[0].is_available(permit_start_dt),
-                        matchup[1].is_available(permit_start_dt)
+                        matchup[1].is_available(permit_start_dt),
+                        schedule.is_team_under_playing_caps_for_date(matchup[0], permit.start_dt),
+                        schedule.is_team_under_playing_caps_for_date(matchup[1], permit.start_dt)
                     ]
 
                     if all(scheduling_criteria):
                         permit_db.reserve_permit_slot(current_date, permit)
+                        schedule.schedule_matchup(matchup[0], matchup[1], permit)
                         scheduled = True
                         break
 
@@ -43,12 +58,4 @@ class Scheduler:
             matchups = remaining_matchups
             current_date += timedelta(days=1)
 
-        print(f"{len(matchups)} left")
-
-        """
-        1. Starting with March 11th, we are going to go through every date until and including May 10th
-        2. For each date, try to schedule as many matchups as possible, according to the following constraints
-            a. Both teams of the match up are available
-            b. Neither team has played more than 2 games in the week
-            c. There is a permit available
-        """
+        return schedule
