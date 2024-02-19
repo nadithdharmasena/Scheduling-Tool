@@ -7,23 +7,26 @@ class Team:
     def __init__(self,
                  name,
                  address,
-                 availabilities,
+                 availability,
                  blackout_dates):
 
         self.name = name
         self.address = address
 
         self.availabilities: dict[str, DailyAvailability] = {
-            "Sunday": availabilities[0],
-            "Monday": availabilities[1],
-            "Tuesday": availabilities[2],
-            "Wednesday": availabilities[3],
-            "Thursday": availabilities[4],
-            "Friday": availabilities[5],
-            "Saturday": availabilities[6]
+            "Sunday": availability[0],
+            "Monday": availability[1],
+            "Tuesday": availability[2],
+            "Wednesday": availability[3],
+            "Thursday": availability[4],
+            "Friday": availability[5],
+            "Saturday": availability[6]
         }
 
         self.blackout_dates = blackout_dates
+
+    def __repr__(self):
+        return "{team_name}".format(team_name=self.name)
 
     def _is_strictly_unavailable(self, dt):
         given_date = dt.date()

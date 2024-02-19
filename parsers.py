@@ -2,6 +2,26 @@ from datetime import datetime, timedelta
 import calendar
 
 
+def extract_time(time_string):
+    # Parse the string to datetime object using the correct format
+    time_obj = datetime.strptime(time_string, '%I:%M %p')
+    # Extract the time part and return
+    return time_obj.time()
+
+
+def parse_date_with_current_year(date_str):
+    # Parse the date string into a date object without considering the year
+    parsed_date = datetime.strptime(date_str, "%a, %b %d")
+
+    # Get the current year
+    current_year = datetime.now().year
+
+    # Replace the year in the parsed date with the current year
+    date_with_current_year = parsed_date.replace(year=current_year)
+
+    return date_with_current_year.date()
+
+
 def parse_date_range_string(date_range_string, year):
     ret_dates = []
 
@@ -35,6 +55,9 @@ def parse_month_string(month_string, year, month_to_num):
 def parse_list_of_date_intervals_string(date_string, year=None):
     if year is None:
         year = datetime.now().year  # Use the current year if none specified
+
+    if date_string == "-":
+        return []
 
     # Month name to number mapping
     month_to_num = {month: index for index, month in enumerate(calendar.month_name) if month}
@@ -79,8 +102,8 @@ def parse_time_interval(time_str):
 def test_date_parsers():
     # Example usage
     date_string = "March; 4/29; 5/6 - 5/10"
-    # Assuming the current year or you can specify any year e.g., year=2023
-    parsed_dates = parse_date_string(date_string)
+    # Assuming the current year, or you can specify any year e.g., year=2023
+    parsed_dates = parse_list_of_date_intervals_string(date_string)
 
     for date in parsed_dates:
         print(date.strftime('%Y-%m-%d'))
@@ -95,3 +118,4 @@ def test_time_parsers():
     time_interval = "10am-2pm"
     start_time, end_time = parse_time_interval(time_interval)
     print("Start time:", start_time, "End time:", end_time)
+
