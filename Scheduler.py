@@ -6,7 +6,7 @@ import itertools
 import random
 
 from typing import List, Tuple
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 
 class Scheduler:

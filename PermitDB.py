@@ -1,10 +1,3 @@
-from Permit import Permit
-
-import pandas as pd
-
-from parsers import parse_date_with_current_year, extract_time
-from datetime import datetime
-
 
 class PermitDB:
     def __init__(self):

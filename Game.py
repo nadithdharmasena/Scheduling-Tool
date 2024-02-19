@@ -1,5 +1,4 @@
 
-
 class Game:
 
     current_id = 1
