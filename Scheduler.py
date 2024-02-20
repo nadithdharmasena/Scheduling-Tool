@@ -1,12 +1,14 @@
+import datetime_utils
 from PermitDB import PermitDB
 from Team import Team
 from WeeklySchedule import WeeklySchedule
+from Permit import Permit
 
 import itertools
 import random
 
 from typing import List, Tuple
-from datetime import timedelta
+from datetime import timedelta, date, datetime, time
 
 
 class Scheduler:
@@ -30,32 +32,54 @@ class Scheduler:
         matchups: List[Tuple[Team, Team]] = list(itertools.combinations(teams, 2))
         matchups = randomize_tuple_elements(matchups)
 
-        current_date = start_date
+        current_date: date = start_date
         while current_date <= end_date:
-            remaining_matchups = []
-            for matchup in matchups:
-                permits_for_date = permit_db.get_permits_for_date(current_date)
-                scheduled = False
-                for permit in permits_for_date:
-                    permit_start_dt = permit.start_dt
+            current_dt = datetime.combine(current_date, time())
+            permits_for_date = permit_db.get_permits_for_date(current_date)
 
-                    scheduling_criteria = [
-                        matchup[0].is_available(permit_start_dt),
-                        matchup[1].is_available(permit_start_dt),
-                        schedule.is_team_under_playing_caps_for_date(matchup[0], permit.start_dt),
-                        schedule.is_team_under_playing_caps_for_date(matchup[1], permit.start_dt)
+            games_to_schedule: List[Tuple[Tuple[Team, Team], Permit]] = []
+
+            for permit in permits_for_date:
+
+                remaining_matchups = []
+
+                # Finds all matchups that can be played using this permit
+                eligible_matchups = []
+                for matchup in matchups:
+                    home_team = matchup[0]
+                    away_team = matchup[1]
+
+                    teams_available_interval = Team.get_overlapping_availability(home_team, away_team, current_dt)
+                    scheduling_interval = datetime_utils.find_intersection_of_dt_intervals(
+                        teams_available_interval, permit.get_availability_interval())
+
+                    eligibility_criteria = [
+                        home_team.is_strictly_unavailable(current_dt),
+                        away_team.is_strictly_unavailable(current_dt),
+                        schedule.is_team_under_playing_caps_for_date(home_team, current_dt),
+                        schedule.is_team_under_playing_caps_for_date(away_team, current_dt),
+                        datetime_utils.length_of_interval_in_hours(scheduling_interval) >= 2
                     ]
 
-                    if all(scheduling_criteria):
-                        permit_db.reserve_permit_slot(current_date, permit)
-                        schedule.schedule_matchup(matchup[0], matchup[1], permit)
-                        scheduled = True
-                        break
+                    if all(eligibility_criteria):
+                        eligible_matchups.append(matchup)
+                    else:
+                        # Matchups that definitely will not be scheduled using this permit
+                        remaining_matchups.append(matchup)
 
-                if not scheduled:
-                    remaining_matchups.append(matchup)
+                if len(eligible_matchups) > 0:
+                    chosen_matchup = eligible_matchups[0]
+                    games_to_schedule.append((chosen_matchup, permit))
+                    remaining_matchups.extend(eligible_matchups[1:])
 
-            matchups = remaining_matchups
+                matchups = remaining_matchups
+
+            for game in games_to_schedule:
+                matchup = game[0]
+                permit = game[1]
+                permit_db.reserve_permit_slot(current_dt, permit)
+                schedule.schedule_matchup(matchup[0], matchup[1], permit)
+
             current_date += timedelta(days=1)
 
         return schedule

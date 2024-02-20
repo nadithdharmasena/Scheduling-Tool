@@ -1,3 +1,5 @@
+from datetime import datetime, date
+
 
 class PermitDB:
     def __init__(self):
@@ -14,9 +16,10 @@ class PermitDB:
             return self._permits_by_date[requested_date]
         return []
 
-    def reserve_permit_slot(self, requested_date, permit):
+    def reserve_permit_slot(self, requested_dt: datetime, permit):
         permit.use_slot()
 
+        requested_date: date = requested_dt.date()
         permits_for_date = self._permits_by_date[requested_date]
         cleaned_permits_for_date = \
             [valid_permit for valid_permit in permits_for_date if valid_permit.is_available()]

@@ -36,3 +36,6 @@ class Permit:
 
         raise ValueError("Permit has already been fully used.")
 
+    def get_availability_interval(self):
+        return self.start_dt, self.end_dt
+

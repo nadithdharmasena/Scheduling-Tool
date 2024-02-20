@@ -1,5 +1,6 @@
-import datetime
-import DailyAvailability
+from DailyAvailability import DailyAvailability
+
+from datetime import date, datetime
 
 
 class Team:
@@ -30,19 +31,24 @@ class Team:
     def __hash__(self):
         return f"{self.name}".__hash__()
 
-    def is_strictly_unavailable(self, dt):
-        given_date = dt.date()
-
+    def is_strictly_unavailable(self, proposed_dt: datetime):
+        proposed_date = proposed_dt.date()
         for unavailable_date in self.blackout_dates:
-            if unavailable_date.date() == given_date:
+            if unavailable_date.date() == proposed_date:
                 return True
         return False
 
-    def is_available(self, dt):
-        return True
+    def get_availability_for(self, proposed_dt: datetime):
+        day_of_week = proposed_dt.strftime('%A')
+        return self._availabilities[day_of_week]
 
-    def get_availability_for(self, day):
-        return self._availabilities.get(day, __default=None)
+    @staticmethod
+    def get_overlapping_availability(team1, team2, proposed_dt: datetime):
+        team1_availability = team1.get_availability_for(proposed_dt)
+        team2_availability = team2.get_availability_for(proposed_dt)
+
+        return DailyAvailability.get_overlapping_availability(team1_availability, team2_availability, proposed_dt)
+
 
 
 

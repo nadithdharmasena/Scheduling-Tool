@@ -1,4 +1,5 @@
-from datetime import time, datetime, timedelta
+import datetime_utils
+from datetime import datetime
 
 
 class DailyAvailability:
@@ -20,32 +21,27 @@ class DailyAvailability:
 
         self.buffer = buffer
 
-    def is_available(self, check_time):
-        """
-        Determines if a given time falls within the start and end time,
-        considering a 15-minute buffer on both ends.
+    @staticmethod
+    def create_daily_availability(interval):
+        if interval is None:
+            return None
 
-        Parameters:
-        - check_time: datetime.time - The time to check against the availability period.
+        return DailyAvailability(interval)
 
-        Returns:
-        - bool: True if the time is within the availability (including buffer), otherwise False.
-        """
+    @staticmethod
+    def get_overlapping_availability(da1, da2, dt):
+        if da1 is None or da2 is None:
+            return None
 
-        if self.startTime is None or self.endTime is None:
-            return False
+        given_date = dt.date()
 
-        # Convert time objects to datetime objects for easy manipulation
-        # Use an arbitrary date for all conversions
-        arbitrary_date = datetime.now().date()
-        start_datetime = datetime.combine(arbitrary_date, self.startTime) - timedelta(minutes=self.buffer)
-        end_datetime = datetime.combine(arbitrary_date, self.endTime) + timedelta(minutes=self.buffer)
-        check_datetime = datetime.combine(arbitrary_date, check_time)
+        da1_start_dt = datetime.combine(given_date, da1.startTime)
+        da1_end_dt = datetime.combine(given_date, da1.endTime)
 
-        # Adjust for the situation where the interval crosses midnight
-        if self.endTime < self.startTime:
-            if self.startTime > check_time > self.endTime:
-                check_datetime += timedelta(days=1)
-            end_datetime += timedelta(days=1)
+        da2_start_dt = datetime.combine(given_date, da2.startTime)
+        da2_end_dt = datetime.combine(given_date, da2.endTime)
 
-        return start_datetime <= check_datetime <= end_datetime
+        da1_interval = (da1_start_dt, da1_end_dt)
+        da2_interval = (da2_start_dt, da2_end_dt)
+
+        return datetime_utils.find_intersection_of_dt_intervals(da1_interval, da2_interval)

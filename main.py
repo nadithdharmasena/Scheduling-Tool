@@ -44,7 +44,7 @@ def extract_teams_from_file(file_path):
 
         # Process raw availability and unavailability data
         avail_intervals = [parsers.parse_time_interval(avail_str) for avail_str in availability_str_list]
-        availability = [DailyAvailability(interval) for interval in avail_intervals]
+        availability = [DailyAvailability.create_daily_availability(interval) for interval in avail_intervals]
         blackout_dates = parsers.parse_list_of_date_intervals_string(complete_exclusion_list)
 
         new_team = Team(team_name, "", availability, blackout_dates)
