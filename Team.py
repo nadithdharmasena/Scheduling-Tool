@@ -12,7 +12,7 @@ class Team:
         self.name = name
         self.address = address
 
-        self.availabilities: dict[str, DailyAvailability] = {
+        self._availabilities: dict[str, DailyAvailability] = {
             "Sunday": availability[0],
             "Monday": availability[1],
             "Tuesday": availability[2],
@@ -30,7 +30,7 @@ class Team:
     def __hash__(self):
         return f"{self.name}".__hash__()
 
-    def _is_strictly_unavailable(self, dt):
+    def is_strictly_unavailable(self, dt):
         given_date = dt.date()
 
         for unavailable_date in self.blackout_dates:
@@ -38,12 +38,14 @@ class Team:
                 return True
         return False
 
-    def is_available(self, dt: datetime):
+    def is_available(self, dt):
+        return True
 
-        day_of_week = dt.strftime('%A')
-        availability = self.availabilities[day_of_week]
+    def get_availability_for(self, day):
+        return self._availabilities.get(day, __default=None)
 
-        return not self._is_strictly_unavailable(dt) and availability.is_available(dt.time())
+
+
 
 
 
