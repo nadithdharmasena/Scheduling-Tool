@@ -1,10 +1,10 @@
 from Team import Team
 from DailyAvailability import DailyAvailability
 from PermitDB import PermitDB
-from Permit import Permit
+from Permit import PermitFactory
 from Scheduler import Scheduler
 
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
 
 import parsers
 import pandas as pd
@@ -54,27 +54,6 @@ def extract_teams_from_file(file_path):
     return teams
 
 
-def process_raw_permit(permit_db: PermitDB, name, field, size, start_time_dt, end_time_dt, active_date):
-
-    def calculate_permit_duration_in_hours(permit_start_dt, permit_end_dt):
-        duration = permit_end_dt - permit_start_dt
-        number_of_hours = duration.total_seconds() / 3600
-        return number_of_hours
-
-    required_permit_duration = 2
-
-    if size == "L" or size == "XL":
-
-        current_permit_start_dt = start_time_dt
-        while calculate_permit_duration_in_hours(current_permit_start_dt, end_time_dt) >= required_permit_duration:
-            current_permit_end_dt = current_permit_start_dt + timedelta(hours=required_permit_duration)
-
-            new_permit = Permit(name, field, size, current_permit_start_dt, current_permit_end_dt)
-            permit_db.add_permit(new_permit, active_date)
-
-            current_permit_start_dt += timedelta(hours=required_permit_duration)
-
-
 def create_permit_db_from_file(file_path):
 
     permit_db = PermitDB()
@@ -99,7 +78,9 @@ def create_permit_db_from_file(file_path):
         start_time_dt = datetime.combine(active_date, start_time)
         end_time_dt = datetime.combine(active_date, end_time)
 
-        process_raw_permit(permit_db, name, field, size, start_time_dt, end_time_dt, active_date)
+        new_permits = PermitFactory.generate_permits(name, field, size, start_time_dt, end_time_dt)
+        for permit in new_permits:
+            permit_db.add_permit(permit, active_date)
 
     return permit_db
 
@@ -128,12 +109,17 @@ def main():
     #
     #     print("=========================")
 
+    total_games = 0
+
     for target_week in range(0, 10):
         print(f"Games in week #{target_week}:")
 
         games_in_week = schedule.get_games_for_week(target_week)
+        total_games += len(games_in_week)
         for game in games_in_week:
             print(f"\t{game}")
+
+    print(f"\nTotal number of games played: {total_games}")
 
 
 main()

@@ -37,14 +37,13 @@ class Scheduler:
             current_dt = datetime.combine(current_date, time())
             permits_for_date = permit_db.get_permits_for_date(current_date)
 
-            games_to_schedule: List[Tuple[Tuple[Team, Team], Permit]] = []
+            permit_index = 0
 
-            for permit in permits_for_date:
+            while permit_index < len(permits_for_date):
+                permit: Permit = permits_for_date[permit_index]
 
+                optimal_matchup = None
                 remaining_matchups = []
-
-                # Finds all matchups that can be played using this permit
-                eligible_matchups = []
                 for matchup in matchups:
                     home_team = matchup[0]
                     away_team = matchup[1]
@@ -54,31 +53,27 @@ class Scheduler:
                         teams_available_interval, permit.get_availability_interval())
 
                     eligibility_criteria = [
-                        home_team.is_strictly_unavailable(current_dt),
-                        away_team.is_strictly_unavailable(current_dt),
+                        not home_team.is_strictly_unavailable(current_dt),
+                        not away_team.is_strictly_unavailable(current_dt),
                         schedule.is_team_under_playing_caps_for_date(home_team, current_dt),
                         schedule.is_team_under_playing_caps_for_date(away_team, current_dt),
                         datetime_utils.length_of_interval_in_hours(scheduling_interval) >= 2
                     ]
 
                     if all(eligibility_criteria):
-                        eligible_matchups.append(matchup)
+                        # This is an eligible matchup for the given permit
+                        if optimal_matchup is not None:
+                            remaining_matchups.append(optimal_matchup)
+                        optimal_matchup = matchup
                     else:
-                        # Matchups that definitely will not be scheduled using this permit
                         remaining_matchups.append(matchup)
 
-                if len(eligible_matchups) > 0:
-                    chosen_matchup = eligible_matchups[0]
-                    games_to_schedule.append((chosen_matchup, permit))
-                    remaining_matchups.extend(eligible_matchups[1:])
+                if optimal_matchup is not None:
+                    schedule.schedule_matchup(optimal_matchup[0], optimal_matchup[1], permit)
+                    permit.reserve()
 
+                permit_index += 1
                 matchups = remaining_matchups
-
-            for game in games_to_schedule:
-                matchup = game[0]
-                permit = game[1]
-                permit_db.reserve_permit_slot(current_dt, permit)
-                schedule.schedule_matchup(matchup[0], matchup[1], permit)
 
             current_date += timedelta(days=1)
 

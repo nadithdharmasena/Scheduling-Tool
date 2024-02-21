@@ -1,4 +1,18 @@
 
+class PermitFactory:
+    @staticmethod
+    def generate_permits(name, field, size, start_dt, end_dt):
+        if size == 'L':
+            new_permit = Permit(name, field, size, start_dt, end_dt)
+            return [new_permit]
+        elif size == 'XL':
+            first_new_permit = Permit(name, field, size, start_dt, end_dt)
+            second_new_permit = Permit(name, field, size, start_dt, end_dt)
+            return [first_new_permit, second_new_permit]
+
+        return []
+
+
 class Permit:
 
     current_id = 1
@@ -13,26 +27,18 @@ class Permit:
         self.start_dt = start_dt
         self.end_dt = end_dt
 
-        if self.size == 'L':
-            self._slots_remaining = 1
-        elif self.size == 'XL':
-            self._slots_remaining = 2
-        else:
-            self._slots_remaining = 0
+        self._is_available = True
 
     def __repr__(self):
         return f"#{self.permit_id} {self.name}/{self.field}/{self.size} [{self.start_dt} - {self.end_dt}]"
 
     def is_available(self):
-        return self._slots_remaining > 0
+        return self._is_available
 
-    def get_slots_remaining(self):
-        return self._slots_remaining
-
-    def use_slot(self):
+    def reserve(self):
         if self.is_available():
-            self._slots_remaining -= 1
-            return True
+            self._is_available = False
+            return
 
         raise ValueError("Permit has already been fully used.")
 
