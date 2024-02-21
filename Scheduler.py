@@ -42,7 +42,12 @@ class Scheduler:
             while permit_index < len(permits_for_date):
                 permit: Permit = permits_for_date[permit_index]
 
+                if not permit.is_available():
+                    permit_index += 1
+                    continue
+
                 optimal_matchup = None
+                optimal_matchup_scheduling_interval = (None, None)
                 remaining_matchups = []
                 for matchup in matchups:
                     home_team = matchup[0]
@@ -64,16 +69,22 @@ class Scheduler:
                         # This is an eligible matchup for the given permit
                         if optimal_matchup is not None:
                             remaining_matchups.append(optimal_matchup)
+
                         optimal_matchup = matchup
+                        optimal_matchup_scheduling_interval = scheduling_interval
                     else:
                         remaining_matchups.append(matchup)
 
-                if optimal_matchup is not None:
-                    schedule.schedule_matchup(optimal_matchup[0], optimal_matchup[1], permit)
-                    permit.reserve()
+                if optimal_matchup is None:
+                    permit_index += 1
+                else:
+                    permit_for_reservation = permit_db.get_permit_for_reservation(permit,
+                                                                                  optimal_matchup_scheduling_interval)
+                    permit_for_reservation.reserve()
+                    schedule.schedule_matchup(optimal_matchup[0], optimal_matchup[1], permit_for_reservation)
 
-                permit_index += 1
                 matchups = remaining_matchups
+                permits_for_date = permit_db.get_permits_for_date(current_date)
 
             current_date += timedelta(days=1)
 

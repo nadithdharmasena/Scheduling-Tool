@@ -1,7 +1,7 @@
 from Team import Team
 from DailyAvailability import DailyAvailability
 from PermitDB import PermitDB
-from Permit import PermitFactory
+from Permit import Permit
 from Scheduler import Scheduler
 
 from datetime import datetime, date
@@ -54,9 +54,9 @@ def extract_teams_from_file(file_path):
     return teams
 
 
-def create_permit_db_from_file(file_path):
+def create_permit_db_from_file(file_path, min_hours_of_availability=2):
 
-    permit_db = PermitDB()
+    permit_db = PermitDB(min_hours_of_availability)
 
     df = pd.read_csv(file_path, skiprows=4)
     df_cleaned = df.dropna(subset=["Park", "Field", "Size", "Date", "StartTime", "EndTime"])
@@ -78,17 +78,45 @@ def create_permit_db_from_file(file_path):
         start_time_dt = datetime.combine(active_date, start_time)
         end_time_dt = datetime.combine(active_date, end_time)
 
-        new_permits = PermitFactory.generate_permits(name, field, size, start_time_dt, end_time_dt)
+        new_permits = Permit.generate_permits(name, field, size, start_time_dt, end_time_dt)
         for permit in new_permits:
             permit_db.add_permit(permit, active_date)
 
     return permit_db
 
 
+def print_schedule_for_team(schedule, team):
+
+    total_games = 0
+    games_for_team = schedule.get_schedule_for_team(team)
+    for week, game_list in games_for_team.items():
+        print(f"Games in week #{week}")
+        for index, game in enumerate(game_list):
+            print(f"\t{index + 1}. {game}")
+            total_games += 1
+
+        print("=========================")
+
+    return total_games
+
+
+def print_games_per_week(schedule):
+    total_games = 0
+    for target_week in range(0, 10):
+        print(f"Games in week #{target_week}:")
+
+        games_in_week = schedule.get_games_for_week(target_week)
+        total_games += len(games_in_week)
+        for game in games_in_week:
+            print(f"\t{game}")
+
+    print(f"\nTotal number of games played: {total_games}")
+
+
 def main():
 
     teams = extract_teams_from_file('team_info.csv')
-    permit_db = create_permit_db_from_file('permits.csv')
+    permit_db = create_permit_db_from_file('permits.csv', 2)
 
     season_start_date = date(2024, 3, 11)
     season_end_date = date(2024, 5, 10)
@@ -100,26 +128,7 @@ def main():
         season_start_date,
         season_end_date)
 
-    # games_for_team = schedule.get_schedule_for_team(teams[5])
-    #
-    # for week, game_list in games_for_team.items():
-    #     print(f"Games in week #{week}")
-    #     for index, game in enumerate(game_list):
-    #         print(f"\t{index + 1}. {game}")
-    #
-    #     print("=========================")
-
-    total_games = 0
-
-    for target_week in range(0, 10):
-        print(f"Games in week #{target_week}:")
-
-        games_in_week = schedule.get_games_for_week(target_week)
-        total_games += len(games_in_week)
-        for game in games_in_week:
-            print(f"\t{game}")
-
-    print(f"\nTotal number of games played: {total_games}")
+    print_schedule_for_team(schedule, teams[0])
 
 
 main()

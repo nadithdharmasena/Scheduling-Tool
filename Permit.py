@@ -1,18 +1,4 @@
 
-class PermitFactory:
-    @staticmethod
-    def generate_permits(name, field, size, start_dt, end_dt):
-        if size == 'L':
-            new_permit = Permit(name, field, size, start_dt, end_dt)
-            return [new_permit]
-        elif size == 'XL':
-            first_new_permit = Permit(name, field, size, start_dt, end_dt)
-            second_new_permit = Permit(name, field, size, start_dt, end_dt)
-            return [first_new_permit, second_new_permit]
-
-        return []
-
-
 class Permit:
 
     current_id = 1
@@ -44,4 +30,27 @@ class Permit:
 
     def get_availability_interval(self):
         return self.start_dt, self.end_dt
+
+    @staticmethod
+    def generate_permits(name, field, size, start_dt, end_dt):
+        if size == 'L':
+            new_permit = Permit(name, field, size, start_dt, end_dt)
+            return [new_permit]
+        elif size == 'XL':
+            first_new_permit = Permit(name, field, size, start_dt, end_dt)
+            second_new_permit = Permit(name, field, size, start_dt, end_dt)
+            return [first_new_permit, second_new_permit]
+
+        return []
+
+    @staticmethod
+    def permit_copy_with_new_availability_interval(original_permit, new_availability_interval):
+        new_permit_start_dt, new_permit_end_dt = new_availability_interval
+
+        return Permit(original_permit.name,
+                      original_permit.field,
+                      original_permit.size,
+                      new_permit_start_dt,
+                      new_permit_end_dt)
+
 
