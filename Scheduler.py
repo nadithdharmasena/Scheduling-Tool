@@ -1,11 +1,10 @@
 import datetime_utils
+import scheduling_utils
+
 from PermitDB import PermitDB
 from Team import Team
 from WeeklySchedule import WeeklySchedule
 from Permit import Permit
-
-import itertools
-import random
 
 from typing import List, Tuple
 from datetime import timedelta, date, datetime, time
@@ -18,19 +17,8 @@ class Scheduler:
     @staticmethod
     def schedule_round_robin(schedule_name: str, teams: List[Team], permit_db: PermitDB, start_date, end_date):
 
-        def randomize_tuple_elements(tuple_list):
-            randomized_list = []
-            for tup in tuple_list:
-                if random.choice([True, False]):
-                    randomized_list.append(tup)  # Keep the order
-                else:
-                    randomized_list.append((tup[1], tup[0]))  # Swap the order
-            return randomized_list
-
         schedule = WeeklySchedule(schedule_name, start_date, end_date, 2)
-
-        matchups: List[Tuple[Team, Team]] = list(itertools.combinations(teams, 2))
-        matchups = randomize_tuple_elements(matchups)
+        matchups: List[Tuple[Team, Team]] = scheduling_utils.generate_balanced_and_randomized_matchups(teams)
 
         current_date: date = start_date
         while current_date <= end_date:
