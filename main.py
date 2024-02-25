@@ -3,10 +3,10 @@ from DailyAvailability import DailyAvailability
 from PermitDB import PermitDB
 from Permit import Permit
 from Scheduler import Scheduler
+import parsers
 
 from datetime import datetime, date
 
-import parsers
 import pandas as pd
 
 

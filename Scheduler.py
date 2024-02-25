@@ -5,6 +5,7 @@ from PermitDB import PermitDB
 from Team import Team
 from WeeklySchedule import WeeklySchedule
 from Permit import Permit
+from CommuteTimeCalculator import CommuteTimeCalculator
 
 from typing import List, Tuple
 from datetime import timedelta, date, datetime, time
@@ -18,6 +19,7 @@ class Scheduler:
     def schedule_round_robin(schedule_name: str, teams: List[Team], permit_db: PermitDB, start_date, end_date):
 
         schedule = WeeklySchedule(schedule_name, start_date, end_date, 2)
+        ctc = CommuteTimeCalculator()
         matchups: List[Tuple[Team, Team]] = scheduling_utils.generate_balanced_and_randomized_matchups(teams)
 
         current_date: date = start_date
@@ -37,7 +39,7 @@ class Scheduler:
                 optimal_matchup = None
                 optimal_matchup_scheduling_interval = (None, None)
                 remaining_matchups = []
-                for matchup in matchups:
+                for matchup_idx, matchup in enumerate(matchups):
                     home_team = matchup[0]
                     away_team = matchup[1]
 
@@ -53,17 +55,32 @@ class Scheduler:
                         datetime_utils.length_of_interval_in_hours(scheduling_interval) >= 2
                     ]
 
-                    if all(eligibility_criteria):
+                    if all(eligibility_criteria) and optimal_matchup is None:
                         # This is an eligible matchup for the given permit
-                        if optimal_matchup is not None:
-                            remaining_matchups.append(optimal_matchup)
+                        home_team_commute_minutes = ctc.get_commute_time(home_team.address,
+                                                                         permit.address,
+                                                                         'transit',
+                                                                         scheduling_interval[0])
 
-                        optimal_matchup = matchup
-                        optimal_matchup_scheduling_interval = scheduling_interval
+                        away_team_commute_minutes = ctc.get_commute_time(away_team.address,
+                                                                         permit.address,
+                                                                         'transit',
+                                                                         scheduling_interval[0])
+
+                        if home_team_commute_minutes <= 20 and away_team_commute_minutes <= 50:
+                            optimal_matchup = matchup
+                            optimal_matchup_scheduling_interval = scheduling_interval
+
+                            remaining_matchups.extend(matchups[matchup_idx + 1:])
+                            break
+                        else:
+                            remaining_matchups.append(matchup)
+
                     else:
                         remaining_matchups.append(matchup)
 
                 if optimal_matchup is None:
+                    # Signifies not a single matchup could use this permit
                     permit_index += 1
                 else:
                     permit_for_reservation = permit_db.get_permit_for_reservation(permit,

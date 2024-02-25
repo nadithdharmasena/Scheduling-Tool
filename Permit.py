@@ -8,6 +8,7 @@ class Permit:
         Permit.current_id += 1
 
         self.name = name
+        self.address = ""
         self.field = field
         self.size = size
         self.start_dt = start_dt
