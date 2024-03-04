@@ -2,8 +2,11 @@ import random
 import itertools
 
 
-def generate_balanced_and_randomized_matchups(teams):
-    matchups = list(itertools.combinations(teams, 2))
+def generate_unbalanced_matchups(teams):
+    return list(itertools.combinations(teams, 2))
+
+
+def generate_balanced_matchups(matchups, teams):
 
     # Count home and away games for each team
     num_home_games = {team: 0 for team in teams}
@@ -26,6 +29,10 @@ def generate_balanced_and_randomized_matchups(teams):
             num_home_games[away] += 1
             num_away_games[away] -= 1
 
-    random.shuffle(matchups)
-
     return matchups
+
+
+def shuffle_matchups(matchups):
+    random.shuffle(matchups)
+    return matchups
+

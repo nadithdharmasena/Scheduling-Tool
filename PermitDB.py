@@ -1,6 +1,7 @@
 from datetime import datetime, date, timedelta
 
 import datetime_utils
+from Constants import Constants
 from Permit import Permit
 from typing import Tuple
 
@@ -39,7 +40,7 @@ class PermitDB:
         permit_date = permit.start_dt.date()
 
         # The following value must be entirely contained within the permit's availability interval
-        reservation_interval = (scheduling_interval[0], scheduling_interval[0] + timedelta(hours=2))
+        reservation_interval = (scheduling_interval[0], scheduling_interval[0] + timedelta(hours=Constants.game_length))
         no_split_required = (reservation_interval == permit.get_availability_interval())
 
         if no_split_required:

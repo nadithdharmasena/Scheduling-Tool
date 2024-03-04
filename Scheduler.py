@@ -6,6 +6,7 @@ from Team import Team
 from WeeklySchedule import WeeklySchedule
 from Permit import Permit
 from CommuteTimeCalculator import CommuteTimeCalculator
+from Constants import Constants
 
 from typing import List, Tuple
 from datetime import timedelta, date, datetime, time
@@ -19,8 +20,43 @@ class Scheduler:
     def schedule_round_robin(schedule_name: str, teams: List[Team], permit_db: PermitDB, start_date, end_date):
 
         schedule = WeeklySchedule(schedule_name, start_date, end_date, 2)
+
+        unbalanced_matchups = scheduling_utils.generate_unbalanced_matchups(teams)
+        matchups: List[Tuple[Team, Team]] = \
+            scheduling_utils.generate_balanced_matchups(unbalanced_matchups, teams)
+
+        matchups = scheduling_utils.shuffle_matchups(matchups)
+
+        return Scheduler._schedule(schedule, matchups, permit_db, start_date, end_date)
+
+    @staticmethod
+    def schedule_double_round_robin(schedule_name: str, teams: List[Team], permit_db: PermitDB, start_date, end_date):
+        def duplicate_elements(original_list):
+            ret_list = []
+            for element in original_list:
+                ret_list.append(element)
+                ret_list.append((element[1], element[0]))
+            return ret_list
+
+        schedule = WeeklySchedule(schedule_name, start_date, end_date, 2)
+        unbalanced_matchups = scheduling_utils.generate_unbalanced_matchups(teams)
+
+        matchups: List[Tuple[Team, Team]] = \
+            scheduling_utils.generate_balanced_matchups(unbalanced_matchups, teams)
+
+        matchups = duplicate_elements(matchups)
+        matchups = scheduling_utils.shuffle_matchups(matchups)
+
+        return Scheduler._schedule(schedule, matchups, permit_db, start_date, end_date)
+
+    @staticmethod
+    def _schedule(schedule: WeeklySchedule,
+                  matchups: List[Tuple[Team, Team]],
+                  permit_db: PermitDB,
+                  start_date,
+                  end_date):
+
         ctc = CommuteTimeCalculator()
-        matchups: List[Tuple[Team, Team]] = scheduling_utils.generate_balanced_and_randomized_matchups(teams)
 
         current_date: date = start_date
         while current_date <= end_date:
@@ -52,7 +88,7 @@ class Scheduler:
                         not away_team.is_strictly_unavailable(current_dt),
                         schedule.is_team_under_playing_caps_for_date(home_team, current_dt),
                         schedule.is_team_under_playing_caps_for_date(away_team, current_dt),
-                        datetime_utils.length_of_interval_in_hours(scheduling_interval) >= 2
+                        datetime_utils.length_of_interval_in_hours(scheduling_interval) >= Constants.game_length
                     ]
 
                     if all(eligibility_criteria) and optimal_matchup is None:

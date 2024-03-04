@@ -4,6 +4,8 @@ import googlemaps
 
 class CommuteTimeCalculator:
 
+    hits = 1
+
     def __init__(self):
         self._gmaps_api_key = os.getenv('GMAPS_API_KEY')
 
@@ -29,6 +31,8 @@ class CommuteTimeCalculator:
         arrival_timestamp = int(arrival_dt.timestamp())
 
         duration_in_minutes = 20
+
+        CommuteTimeCalculator.hits += 1
 
         # distance_result = self.gmaps.distance_matrix(origin,
         #                                              destination,

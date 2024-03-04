@@ -1,4 +1,4 @@
 .idea/
 __pycache__/
-team_info.csv
-permits.csv
+team_info/
+permits/
