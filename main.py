@@ -1,3 +1,5 @@
+from CommuteTimeCalculator import CommuteTimeCalculator
+from Constants import Constants
 from Team import Team
 from DailyAvailability import DailyAvailability
 from PermitDB import PermitDB
@@ -58,14 +60,15 @@ def create_permit_db_from_file(file_path, min_hours_of_availability=2):
 
     permit_db = PermitDB(min_hours_of_availability)
 
-    df = pd.read_csv(file_path, skiprows=4)
-    df_cleaned = df.dropna(subset=["Park", "Field", "Size", "Date", "StartTime", "EndTime"])
+    df = pd.read_csv(file_path, skiprows=4, dtype={"Permit #": str})
+    df_cleaned = df.dropna(subset=["Park", "Field", "Size", "Date", "StartTime", "EndTime", "Permit #"])
 
     # Iterate through each row in the DataFrame
     for index, row in df_cleaned.iterrows():
         name = str(row['Park'])
         field = str(row['Field'])
         size = str(row['Size'])
+        permit_number = str(row["Permit #"])
 
         date_str = str(row['Date'])
         start_time_str = str(row['StartTime'])
@@ -78,7 +81,7 @@ def create_permit_db_from_file(file_path, min_hours_of_availability=2):
         start_time_dt = datetime.combine(active_date, start_time)
         end_time_dt = datetime.combine(active_date, end_time)
 
-        new_permits = Permit.generate_permits(name, field, size, start_time_dt, end_time_dt)
+        new_permits = Permit.generate_permits(name, field, size, start_time_dt, end_time_dt, permit_number)
         for permit in new_permits:
             permit_db.add_permit(permit, active_date)
 
@@ -113,22 +116,58 @@ def print_games_per_week(schedule):
     print(f"\nTotal number of games played: {total_games}")
 
 
+def print_execution_stats():
+    print(f"Total API calls: {CommuteTimeCalculator.hits}")
+
+
 def main():
 
-    teams = extract_teams_from_file('team_info.csv')
-    permit_db = create_permit_db_from_file('permits.csv', 2)
-
+    # Set start/end dates of season
     season_start_date = date(2024, 3, 11)
     season_end_date = date(2024, 5, 10)
+    permit_db = create_permit_db_from_file('permits/permits_2024.csv', Constants.game_length)
 
-    schedule = Scheduler.schedule_round_robin(
+    # Club A division scheduling
+    cluba_teams = extract_teams_from_file('team_info/cluba.csv')
+    cluba_schedule = Scheduler.schedule_round_robin(
+        "Club A Division Schedule",
+        cluba_teams,
+        permit_db,
+        season_start_date,
+        season_end_date
+    )
+
+    # Interscholastic division scheduling
+    interscholastic_teams = extract_teams_from_file('team_info/interscholastic.csv')
+    interscholastic_schedule = Scheduler.schedule_round_robin(
         "Interscholastic Division Schedule",
-        teams,
+        interscholastic_teams,
         permit_db,
         season_start_date,
         season_end_date)
 
-    print_schedule_for_team(schedule, teams[0])
+    # Club GX division scheduling
+    clubgx_teams = extract_teams_from_file('team_info/clubgx.csv')
+    clubgx_schedule = Scheduler.schedule_round_robin(
+        "Club GX Division Schedule",
+        clubgx_teams,
+        permit_db,
+        season_start_date,
+        season_end_date
+    )
+
+    # Club B division scheduling
+    clubb_teams = extract_teams_from_file('team_info/clubb.csv')
+    clubb_schedule = Scheduler.schedule_round_robin(
+        "Club B Division Schedule",
+        clubb_teams,
+        permit_db,
+        season_start_date,
+        season_end_date
+    )
+
+    # print_schedule_for_team(cluba_schedule, cluba_teams[0])
 
 
 main()
+print_execution_stats()
