@@ -94,12 +94,12 @@ class Scheduler:
                     if all(eligibility_criteria) and optimal_matchup is None:
                         # This is an eligible matchup for the given permit
                         home_team_commute_minutes = ctc.get_commute_time(home_team.address,
-                                                                         permit.address,
+                                                                         permit.map_location,
                                                                          'transit',
                                                                          scheduling_interval[0])
 
                         away_team_commute_minutes = ctc.get_commute_time(away_team.address,
-                                                                         permit.address,
+                                                                         permit.map_location,
                                                                          'transit',
                                                                          scheduling_interval[0])
 
@@ -121,8 +121,8 @@ class Scheduler:
                 else:
                     permit_for_reservation = permit_db.get_permit_for_reservation(permit,
                                                                                   optimal_matchup_scheduling_interval)
-                    permit_for_reservation.reserve()
-                    schedule.schedule_matchup(optimal_matchup[0], optimal_matchup[1], permit_for_reservation)
+                    game = schedule.schedule_matchup(optimal_matchup[0], optimal_matchup[1], permit_for_reservation)
+                    permit_for_reservation.reserve(game)
 
                 matchups = remaining_matchups
                 permits_for_date = permit_db.get_permits_for_date(current_date)

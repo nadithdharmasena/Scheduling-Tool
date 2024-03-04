@@ -41,6 +41,8 @@ class WeeklySchedule:
         self._add_game_for_team_in_week(new_game, home_team, which_week)
         self._add_game_for_team_in_week(new_game, away_team, which_week)
 
+        return new_game
+
     def _add_game_for_team_in_week(self, game: Game, team: Team, which_week: int):
 
         if team not in self._games_by_team_by_week:

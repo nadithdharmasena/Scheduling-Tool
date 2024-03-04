@@ -11,6 +11,12 @@ class PermitDB:
         self._permits_by_date = dict()
         self._min_hours_of_permit_availability = min_hours_of_permit_availability
 
+    def get_all_permits(self):
+        all_permits = []
+        for permits in self._permits_by_date.values():
+            all_permits.extend(permits)
+        return all_permits
+
     def total_num_of_available_permits(self):
         count = 0
         for avail_date in self._permits_by_date:

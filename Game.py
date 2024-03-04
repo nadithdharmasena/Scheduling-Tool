@@ -12,7 +12,10 @@ class Game:
         Game.current_id += 1
 
     def __repr__(self):
-        return f"{self.away_team} at {self.home_team} (Id #{self.game_id}) [{self.permit}]"
+        return f"{self.away_team} at {self.home_team}"
+
+    def __str__(self):
+        return repr(self)
 
     def __hash__(self):
         return self.game_id
