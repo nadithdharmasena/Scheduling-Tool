@@ -85,7 +85,14 @@ def main():
         season_end_date
     )
 
+    # Dump permits
     pandas_utils.dump_permit_db_to_csv(permit_db)
+
+    # Dump schedules
+    pandas_utils.dump_team_schedules_to_csv(cluba_schedule, cluba_teams)
+    pandas_utils.dump_team_schedules_to_csv(interscholastic_schedule, interscholastic_teams)
+    pandas_utils.dump_team_schedules_to_csv(clubgx_schedule, clubgx_teams)
+    pandas_utils.dump_team_schedules_to_csv(clubb_schedule, clubb_teams)
 
 
 main()

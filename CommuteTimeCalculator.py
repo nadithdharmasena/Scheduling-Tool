@@ -27,21 +27,18 @@ class CommuteTimeCalculator:
                     minutes += int(time_parts[i])
             return minutes
 
-        # Convert datetime to a Unix timestamp (seconds since epoch)
-        arrival_timestamp = int(arrival_dt.timestamp())
+        distance_result = self.gmaps.distance_matrix(origins=origin,
+                                                     destinations=destination,
+                                                     mode=mode,
+                                                     arrival_time=arrival_dt)
 
-        duration_in_minutes = 20
+        # Extracting duration and converting it to minutes
+        duration = distance_result['rows'][0]['elements'][0]['duration']['text']
+        duration_in_minutes = convert_duration_to_minutes(duration)
 
         CommuteTimeCalculator.hits += 1
 
-        # distance_result = self.gmaps.distance_matrix(origin,
-        #                                              destination,
-        #                                              mode=mode,
-        #                                              arrival_time=arrival_timestamp)
-        #
-        # # Extracting duration and converting it to minutes
-        # duration = distance_result['rows'][0]['elements'][0]['duration']['text']
-        # duration_in_minutes = convert_duration_to_minutes(duration)
+        print(f"Number of hits: {CommuteTimeCalculator.hits}")
 
         return duration_in_minutes
 

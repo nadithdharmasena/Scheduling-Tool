@@ -95,15 +95,19 @@ class Scheduler:
                         # This is an eligible matchup for the given permit
                         home_team_commute_minutes = ctc.get_commute_time(home_team.address,
                                                                          permit.map_location,
-                                                                         'transit',
+                                                                         'driving',
                                                                          scheduling_interval[0])
 
                         away_team_commute_minutes = ctc.get_commute_time(away_team.address,
                                                                          permit.map_location,
-                                                                         'transit',
+                                                                         'driving',
                                                                          scheduling_interval[0])
 
-                        if home_team_commute_minutes <= 20 and away_team_commute_minutes <= 50:
+                        home_team_max_commute = 10
+                        away_team_max_commute = 45
+
+                        if (home_team_commute_minutes <= home_team_max_commute
+                                and away_team_commute_minutes <= away_team_max_commute):
                             optimal_matchup = matchup
                             optimal_matchup_scheduling_interval = scheduling_interval
 
