@@ -49,7 +49,7 @@ def main():
     # Club A division scheduling
     cluba_teams = pandas_utils.extract_teams_from_file('team_info/cluba.csv')
     cluba_schedule = Scheduler.schedule_round_robin(
-        "Club A Division Schedule",
+        "Club A Division",
         cluba_teams,
         permit_db,
         season_start_date,
@@ -59,7 +59,7 @@ def main():
     # Interscholastic division scheduling
     interscholastic_teams = pandas_utils.extract_teams_from_file('team_info/interscholastic.csv')
     interscholastic_schedule = Scheduler.schedule_round_robin(
-        "Interscholastic Division Schedule",
+        "Interscholastic Division",
         interscholastic_teams,
         permit_db,
         season_start_date,
@@ -68,7 +68,7 @@ def main():
     # Club GX division scheduling
     clubgx_teams = pandas_utils.extract_teams_from_file('team_info/clubgx.csv')
     clubgx_schedule = Scheduler.schedule_double_round_robin(
-        "Club GX Division Schedule",
+        "Club GX Division",
         clubgx_teams,
         permit_db,
         season_start_date,
@@ -78,7 +78,7 @@ def main():
     # Club B division scheduling
     clubb_teams = pandas_utils.extract_teams_from_file('team_info/clubb.csv')
     clubb_schedule = Scheduler.schedule_round_robin(
-        "Club B Division Schedule",
+        "Club B Division",
         clubb_teams,
         permit_db,
         season_start_date,

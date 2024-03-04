@@ -3,7 +3,8 @@ class Game:
 
     current_id = 1
 
-    def __init__(self, home_team, away_team, permit):
+    def __init__(self, league_name, home_team, away_team, permit):
+        self.league_name = league_name
         self.home_team = home_team
         self.away_team = away_team
         self.permit = permit
@@ -12,7 +13,7 @@ class Game:
         Game.current_id += 1
 
     def __repr__(self):
-        return f"{self.away_team} at {self.home_team}"
+        return f"{self.league_name}: {self.away_team} at {self.home_team}"
 
     def __str__(self):
         return repr(self)

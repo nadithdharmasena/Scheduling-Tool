@@ -36,7 +36,7 @@ class WeeklySchedule:
 
     def schedule_matchup(self, home_team: Team, away_team: Team, permit: Permit):
         which_week = permit.start_dt.isocalendar()[1] - self._start_date.isocalendar()[1]
-        new_game = Game(home_team, away_team, permit)
+        new_game = Game(self.name, home_team, away_team, permit)
 
         self._add_game_for_team_in_week(new_game, home_team, which_week)
         self._add_game_for_team_in_week(new_game, away_team, which_week)
@@ -54,7 +54,7 @@ class WeeklySchedule:
         self._games_by_team_by_week[team][which_week].append(game)
 
     def get_schedule_for_team(self, team: Team):
-        if team in  self._games_by_team_by_week:
+        if team in self._games_by_team_by_week:
             return self._games_by_team_by_week[team]
 
         return dict()

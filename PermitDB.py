@@ -1,4 +1,5 @@
 from datetime import datetime, date, timedelta
+from sortedcontainers import SortedDict
 
 import datetime_utils
 from Constants import Constants
@@ -8,7 +9,7 @@ from typing import Tuple
 
 class PermitDB:
     def __init__(self, min_hours_of_permit_availability):
-        self._permits_by_date = dict()
+        self._permits_by_date = SortedDict()
         self._min_hours_of_permit_availability = min_hours_of_permit_availability
 
     def get_all_permits(self):
