@@ -61,19 +61,25 @@ def main():
     # Dump permits
     pandas_utils.dump_permit_db_to_csv(permit_db)
 
-    # Dump schedules
-    pandas_utils.dump_team_schedules_to_csv(cluba_schedule,
-                                            cluba_teams,
-                                            cluba_remaining_matchups)
-    pandas_utils.dump_team_schedules_to_csv(interscholastic_schedule,
-                                            interscholastic_teams,
-                                            interscholastic_remaining_matchups)
+    # Dump team schedules
     pandas_utils.dump_team_schedules_to_csv(clubgx_schedule,
                                             clubgx_teams,
                                             clubgx_remaining_matchups)
+    pandas_utils.dump_team_schedules_to_csv(cluba_schedule,
+                                            cluba_teams,
+                                            cluba_remaining_matchups)
     pandas_utils.dump_team_schedules_to_csv(clubb_schedule,
                                             clubb_teams,
                                             clubb_remaining_matchups)
+    pandas_utils.dump_team_schedules_to_csv(interscholastic_schedule,
+                                            interscholastic_teams,
+                                            interscholastic_remaining_matchups)
+
+    # Dump weekly schedules
+    pandas_utils.dump_weekly_schedule_to_csv(clubgx_schedule)
+    pandas_utils.dump_weekly_schedule_to_csv(cluba_schedule)
+    pandas_utils.dump_weekly_schedule_to_csv(clubb_schedule)
+    pandas_utils.dump_weekly_schedule_to_csv(interscholastic_schedule)
 
     CommuteTimeCalculator.instance().freeze()
 
