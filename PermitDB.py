@@ -27,6 +27,11 @@ class PermitDB:
         return count
 
     def add_permit(self, permit, active_date):
+
+        permit_availability_hours = datetime_utils.length_of_interval_in_hours(permit.get_availability_interval())
+        if permit_availability_hours < self._min_hours_of_permit_availability:
+            return
+
         if active_date in self._permits_by_date:
             self._permits_by_date[active_date].append(permit)
         else:
