@@ -1,3 +1,5 @@
+import logging
+
 import datetime_utils
 import scheduling_utils
 
@@ -27,7 +29,9 @@ class Scheduler:
 
         matchups = scheduling_utils.shuffle_matchups(matchups)
 
-        return Scheduler._schedule(schedule, matchups, permit_db, start_date, end_date)
+        remaining_matchups = Scheduler._schedule(schedule, matchups, permit_db, start_date, end_date)
+
+        return schedule, remaining_matchups
 
     @staticmethod
     def schedule_double_round_robin(schedule_name: str, teams: List[Team], permit_db: PermitDB, start_date, end_date):
@@ -47,7 +51,9 @@ class Scheduler:
         matchups = duplicate_elements(matchups)
         matchups = scheduling_utils.shuffle_matchups(matchups)
 
-        return Scheduler._schedule(schedule, matchups, permit_db, start_date, end_date)
+        remaining_matchups = Scheduler._schedule(schedule, matchups, permit_db, start_date, end_date)
+
+        return schedule, remaining_matchups
 
     @staticmethod
     def _schedule(schedule: WeeklySchedule,
@@ -56,7 +62,8 @@ class Scheduler:
                   start_date,
                   end_date):
 
-        ctc = CommuteTimeCalculator()
+        ctc = CommuteTimeCalculator.instance()
+        num_expected_matchups = len(matchups)
 
         current_date: date = start_date
         while current_date <= end_date:
@@ -74,6 +81,8 @@ class Scheduler:
 
                 optimal_matchup = None
                 optimal_matchup_scheduling_interval = (None, None)
+                optimal_home_team_commute_time = 1000
+
                 remaining_matchups = []
                 for matchup_idx, matchup in enumerate(matchups):
                     home_team = matchup[0]
@@ -103,16 +112,20 @@ class Scheduler:
                                                                          'driving',
                                                                          scheduling_interval[0])
 
-                        home_team_max_commute = 10
-                        away_team_max_commute = 45
+                        if (home_team_commute_minutes <= Constants.home_team_max_commute
+                                and away_team_commute_minutes <= Constants.away_team_max_commute):
 
-                        if (home_team_commute_minutes <= home_team_max_commute
-                                and away_team_commute_minutes <= away_team_max_commute):
-                            optimal_matchup = matchup
-                            optimal_matchup_scheduling_interval = scheduling_interval
+                            if home_team_commute_minutes <= optimal_home_team_commute_time:
 
-                            remaining_matchups.extend(matchups[matchup_idx + 1:])
-                            break
+                                # Put the less optimal match back in the matches to be scheduled list
+                                if optimal_matchup:
+                                    remaining_matchups.append(optimal_matchup)
+
+                                optimal_matchup = matchup
+                                optimal_matchup_scheduling_interval = scheduling_interval
+                                optimal_home_team_commute_time = home_team_commute_minutes
+                            else:
+                                remaining_matchups.append(matchup)
                         else:
                             remaining_matchups.append(matchup)
 
@@ -133,4 +146,7 @@ class Scheduler:
 
             current_date += timedelta(days=1)
 
-        return schedule
+        logging.info(f"{schedule.name} | Scheduled {schedule.get_num_games()} out of {num_expected_matchups} "
+                     f"expected -- {len(matchups)} left: {matchups}")
+
+        return matchups
