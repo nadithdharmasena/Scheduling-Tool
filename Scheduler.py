@@ -75,7 +75,7 @@ class Scheduler:
             while permit_index < len(permits_for_date):
                 permit: Permit = permits_for_date[permit_index]
 
-                if not permit.is_available():
+                if not permit.is_available() or permit.size != 'L':
                     permit_index += 1
                     continue
 

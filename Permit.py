@@ -41,7 +41,7 @@ class Permit:
 
     @staticmethod
     def generate_permits(name, field, size, start_dt, end_dt, permit_number, borough, map_location):
-        if size == 'L':
+        if size == 'M' or size == 'L':
             new_permit = Permit(name, field, size, start_dt, end_dt, permit_number, borough, map_location)
             return [new_permit]
         elif size == 'XL':
