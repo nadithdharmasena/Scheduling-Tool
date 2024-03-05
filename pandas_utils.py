@@ -9,6 +9,8 @@ import parsers
 from datetime import datetime
 import pandas as pd
 
+from WeeklySchedule import WeeklySchedule
+
 
 def extract_teams_from_file(file_path):
     teams = []
@@ -152,6 +154,49 @@ def dump_team_schedules_to_csv(schedule, teams, remaining_matchups):
         dump_remaining_matchups_to_csv(schedule, team, remaining_matchups)
 
 
+def dump_team_schedule_to_csv(schedule, team):
+
+    filedir = f"schedules/{schedule.name}"
+    filename = f"{filedir}/{schedule.name}-{team.name}.csv"
+
+    data = {
+        "Week": [],
+        "Date": [],
+        "Home": [],
+        "Away": [],
+        "Start Time": [],
+        "End Time": [],
+        "Permit": [],
+        "League Name": []
+    }
+
+    games_for_team = schedule.get_schedule_for_team(team)
+    for week, game_list in games_for_team.items():
+        for game in game_list:
+            data["Week"].append(week)
+
+            game_date_str = game.permit.start_dt.strftime('%m/%d/%Y')
+            data["Date"].append(game_date_str)
+
+            data["Home"].append(game.home_team)
+            data["Away"].append(game.away_team)
+
+            start_time_str = game.permit.start_dt.strftime('%I:%M %p')
+            data["Start Time"].append(start_time_str)
+
+            end_time_str = game.permit.end_dt.strftime('%I:%M %p')
+            data["End Time"].append(end_time_str)
+
+            data["Permit"].append(str(game.permit))
+            data["League Name"].append(game.league_name)
+
+    columns = ["Week", "Date", "Home", "Away", "Start Time", "End Time", "Permit", "League Name"]
+
+    df = pd.DataFrame(data, columns=columns)
+
+    df.to_csv(filename, index=False)
+
+
 def dump_remaining_matchups_to_csv(schedule, team, remaining_matchups):
     filedir = f"schedules/{schedule.name}"
     filename = f"{filedir}/{schedule.name}-{team.name}-remainders.csv"
@@ -168,14 +213,13 @@ def dump_remaining_matchups_to_csv(schedule, team, remaining_matchups):
     df.to_csv(filename, index=False)
 
 
-def dump_team_schedule_to_csv(schedule, team):
-
+def dump_weekly_schedule_to_csv(schedule: WeeklySchedule):
     filedir = f"schedules/{schedule.name}"
-    filename = f"{filedir}/{schedule.name}-{team.name}.csv"
+    filename = f"{filedir}/{schedule.name}-weekly.csv"
 
     data = {
-        "Date": [],
         "Week": [],
+        "Date": [],
         "Home": [],
         "Away": [],
         "Start Time": [],
@@ -184,29 +228,28 @@ def dump_team_schedule_to_csv(schedule, team):
         "League Name": []
     }
 
-    games_for_team = schedule.get_schedule_for_team(team)
-    for week, game_list in games_for_team.items():
-        for game in game_list:
-            game_date_str = game.permit.start_dt.strftime('%m/%d/%Y')
+    all_games = schedule.get_all_games()
+    for game in all_games:
+        data["Week"].append(game.week)
 
-            data["Date"].append(game_date_str)
-            data["Week"].append(week)
-            data["Home"].append(game.home_team)
-            data["Away"].append(game.away_team)
+        game_date_str = game.permit.start_dt.strftime('%m/%d/%Y')
+        data["Date"].append(game_date_str)
 
-            start_time_str = game.permit.start_dt.strftime('%I:%M %p')
-            data["Start Time"].append(start_time_str)
+        data["Home"].append(game.home_team)
+        data["Away"].append(game.away_team)
 
-            end_time_str = game.permit.end_dt.strftime('%I:%M %p')
-            data["End Time"].append(end_time_str)
+        start_time_str = game.permit.start_dt.strftime('%I:%M %p')
+        data["Start Time"].append(start_time_str)
 
-            data["Permit"].append(str(game.permit))
-            data["League Name"].append(game.league_name)
+        end_time_str = game.permit.end_dt.strftime('%I:%M %p')
+        data["End Time"].append(end_time_str)
 
-    columns = ["Date", "Week", "Home", "Away", "Start Time", "End Time", "Permit", "League Name"]
+        data["Permit"].append(str(game.permit))
+        data["League Name"].append(game.league_name)
+
+    columns = ["Week", "Date", "Home", "Away", "Start Time", "End Time", "Permit", "League Name"]
 
     df = pd.DataFrame(data, columns=columns)
-
     df.to_csv(filename, index=False)
 
 

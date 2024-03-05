@@ -62,31 +62,34 @@ class Scheduler:
                   start_date,
                   end_date):
 
+        def compare_tuples_with_priority(time1, time2) -> bool:
+            if time1[0] == time2[0]:
+                return time1[1] <= time2[1]
+            return time1[0] < time2[0]
+
         ctc = CommuteTimeCalculator.instance()
         num_expected_matchups = len(matchups)
+        unscheduled_matchups = []
 
-        current_date: date = start_date
-        while current_date <= end_date:
-            current_dt = datetime.combine(current_date, time())
-            permits_for_date = permit_db.get_permits_for_date(current_date)
+        for matchup in matchups:
+            # We want to minimize travel time for the home team
+            home_team: Team = matchup[0]
+            away_team: Team = matchup[1]
 
-            permit_index = 0
+            optimal_permit_for_matchup = None
+            optimal_permit_scheduling_interval = None
+            optimal_permit_home_team_commute_times: Tuple[int, int] = (1000, 1000)
 
-            while permit_index < len(permits_for_date):
-                permit: Permit = permits_for_date[permit_index]
+            current_date: date = start_date
+            while current_date <= end_date:
+                current_dt = datetime.combine(current_date, time())
+                permits_for_date = permit_db.get_permits_for_date(current_date)
 
-                if not permit.is_available() or permit.size != 'L':
-                    permit_index += 1
-                    continue
+                for permit in permits_for_date:
 
-                optimal_matchup = None
-                optimal_matchup_scheduling_interval = (None, None)
-                optimal_home_team_commute_time = 1000
-
-                remaining_matchups = []
-                for matchup_idx, matchup in enumerate(matchups):
-                    home_team = matchup[0]
-                    away_team = matchup[1]
+                    # Disregards unavailable or undersized permits
+                    if not permit.is_available() or permit.size != 'L':
+                        continue
 
                     teams_available_interval = Team.get_overlapping_availability(home_team, away_team, current_dt)
                     scheduling_interval = datetime_utils.find_intersection_of_dt_intervals(
@@ -100,8 +103,7 @@ class Scheduler:
                         datetime_utils.length_of_interval_in_hours(scheduling_interval) >= Constants.game_length
                     ]
 
-                    if all(eligibility_criteria) and optimal_matchup is None:
-                        # This is an eligible matchup for the given permit
+                    if all(eligibility_criteria):
                         home_team_commute_minutes = ctc.get_commute_time(home_team.address,
                                                                          permit.map_location,
                                                                          'driving',
@@ -112,41 +114,28 @@ class Scheduler:
                                                                          'driving',
                                                                          scheduling_interval[0])
 
-                        if (home_team_commute_minutes <= Constants.home_team_max_commute
-                                and away_team_commute_minutes <= Constants.away_team_max_commute):
+                        proposed_commute_times = (home_team_commute_minutes, away_team_commute_minutes)
 
-                            if home_team_commute_minutes <= optimal_home_team_commute_time:
+                        if optimal_permit_for_matchup is None or \
+                            (optimal_permit_for_matchup and
+                             compare_tuples_with_priority(proposed_commute_times,
+                                                          optimal_permit_home_team_commute_times)):
 
-                                # Put the less optimal match back in the matches to be scheduled list
-                                if optimal_matchup:
-                                    remaining_matchups.append(optimal_matchup)
+                            optimal_permit_for_matchup = permit
+                            optimal_permit_scheduling_interval = scheduling_interval
+                            optimal_permit_home_team_commute_times = proposed_commute_times
 
-                                optimal_matchup = matchup
-                                optimal_matchup_scheduling_interval = scheduling_interval
-                                optimal_home_team_commute_time = home_team_commute_minutes
-                            else:
-                                remaining_matchups.append(matchup)
-                        else:
-                            remaining_matchups.append(matchup)
+                current_date += timedelta(days=1)
 
-                    else:
-                        remaining_matchups.append(matchup)
-
-                if optimal_matchup is None:
-                    # Signifies not a single matchup could use this permit
-                    permit_index += 1
-                else:
-                    permit_for_reservation = permit_db.get_permit_for_reservation(permit,
-                                                                                  optimal_matchup_scheduling_interval)
-                    game = schedule.schedule_matchup(optimal_matchup[0], optimal_matchup[1], permit_for_reservation)
-                    permit_for_reservation.reserve(game)
-
-                matchups = remaining_matchups
-                permits_for_date = permit_db.get_permits_for_date(current_date)
-
-            current_date += timedelta(days=1)
+            if optimal_permit_for_matchup is None:
+                unscheduled_matchups.append(matchup)
+            else:
+                permit_for_reservation = permit_db.get_permit_for_reservation(optimal_permit_for_matchup,
+                                                                              optimal_permit_scheduling_interval)
+                game = schedule.schedule_matchup(matchup[0], matchup[1], permit_for_reservation)
+                permit_for_reservation.reserve(game)
 
         logging.info(f"{schedule.name} | Scheduled {schedule.get_num_games()} out of {num_expected_matchups} "
-                     f"expected -- {len(matchups)} left: {matchups}")
+                     f"expected -- {len(unscheduled_matchups)} left: {unscheduled_matchups}")
 
-        return matchups
+        return unscheduled_matchups

@@ -2,6 +2,7 @@ from Game import Game
 from Team import Team
 from Permit import Permit
 
+from sortedcontainers import SortedDict, SortedList
 from datetime import datetime
 from typing import Dict, List
 
@@ -13,7 +14,7 @@ class WeeklySchedule:
         self._end_date = end_date
         self._max_games_per_week = max_games_per_week
 
-        self._games_by_team_by_week: Dict[Team, Dict[int, List[Game]]] = dict()
+        self._games_by_team_by_week: Dict[Team, SortedDict[int, SortedList[Game]]] = dict()
 
         self._num_games = 0
 
@@ -41,7 +42,7 @@ class WeeklySchedule:
 
     def schedule_matchup(self, home_team: Team, away_team: Team, permit: Permit):
         which_week = permit.start_dt.isocalendar()[1] - self._start_date.isocalendar()[1]
-        new_game = Game(self.name, home_team, away_team, permit)
+        new_game = Game(self.name, home_team, away_team, permit, which_week)
 
         self._add_game_for_team_in_week(new_game, home_team, which_week)
         self._add_game_for_team_in_week(new_game, away_team, which_week)
@@ -53,12 +54,12 @@ class WeeklySchedule:
     def _add_game_for_team_in_week(self, game: Game, team: Team, which_week: int):
 
         if team not in self._games_by_team_by_week:
-            self._games_by_team_by_week[team] = dict()
+            self._games_by_team_by_week[team] = SortedDict()
 
         if which_week not in self._games_by_team_by_week[team]:
-            self._games_by_team_by_week[team][which_week] = []
+            self._games_by_team_by_week[team][which_week] = SortedList()
 
-        self._games_by_team_by_week[team][which_week].append(game)
+        self._games_by_team_by_week[team][which_week].add(game)
 
     def get_schedule_for_team(self, team: Team):
         if team in self._games_by_team_by_week:
@@ -66,11 +67,13 @@ class WeeklySchedule:
 
         return dict()
 
-    def get_games_for_week(self, requested_week):
-        games = set()
+    def get_all_games(self):
+        all_games = SortedList()
+        added_games = set()
         for games_for_team_by_week in self._games_by_team_by_week.values():
-            for week, team_games_in_week in games_for_team_by_week.items():
-                if week == requested_week:
-                    games.update(team_games_in_week)
-
-        return games
+            for games_by_week in games_for_team_by_week.values():
+                for game in games_by_week:
+                    if game not in added_games:
+                        all_games.add(game)
+                        added_games.add(game)
+        return all_games
