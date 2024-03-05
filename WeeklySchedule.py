@@ -2,6 +2,7 @@ from Game import Game
 from Team import Team
 from Permit import Permit
 
+from sortedcontainers import SortedDict, SortedList
 from datetime import datetime
 from typing import Dict, List
 
@@ -13,7 +14,7 @@ class WeeklySchedule:
         self._end_date = end_date
         self._max_games_per_week = max_games_per_week
 
-        self._games_by_team_by_week: Dict[Team, Dict[int, List[Game]]] = dict()
+        self._games_by_team_by_week: Dict[Team, SortedDict[int, SortedList[Game]]] = dict()
 
         self._num_games = 0
 
@@ -53,12 +54,12 @@ class WeeklySchedule:
     def _add_game_for_team_in_week(self, game: Game, team: Team, which_week: int):
 
         if team not in self._games_by_team_by_week:
-            self._games_by_team_by_week[team] = dict()
+            self._games_by_team_by_week[team] = SortedDict()
 
         if which_week not in self._games_by_team_by_week[team]:
-            self._games_by_team_by_week[team][which_week] = []
+            self._games_by_team_by_week[team][which_week] = SortedList()
 
-        self._games_by_team_by_week[team][which_week].append(game)
+        self._games_by_team_by_week[team][which_week].add(game)
 
     def get_schedule_for_team(self, team: Team):
         if team in self._games_by_team_by_week:

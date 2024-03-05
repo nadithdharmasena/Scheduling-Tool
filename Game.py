@@ -21,6 +21,8 @@ class Game:
     def __hash__(self):
         return self.game_id
 
+    def __lt__(self, other):
+        return self.permit.start_dt < other.permit.start_dt
 
 
 

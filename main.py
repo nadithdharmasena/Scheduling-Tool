@@ -8,10 +8,8 @@ import pandas_utils
 from datetime import date
 
 
-def print_execution_stats(permit_db):
+def print_execution_stats():
     print(f"Total API calls: {CommuteTimeCalculator.hits}")
-    print(f"Total # of games scheduled: {Game.current_id - 1}")
-    print(f"Total # of still available permits: {permit_db.total_num_of_available_permits()}")
 
 
 def main():
@@ -79,7 +77,7 @@ def main():
 
     CommuteTimeCalculator.instance().freeze()
 
-    print_execution_stats(permit_db)
+    print_execution_stats()
 
 
 main()
