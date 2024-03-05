@@ -15,6 +15,11 @@ class WeeklySchedule:
 
         self._games_by_team_by_week: Dict[Team, Dict[int, List[Game]]] = dict()
 
+        self._num_games = 0
+
+    def get_num_games(self):
+        return self._num_games
+
     def is_team_under_playing_caps_for_date(self, team: Team, matchup_dt: datetime):
         which_week = matchup_dt.isocalendar()[1] - self._start_date.isocalendar()[1]
 
@@ -40,6 +45,8 @@ class WeeklySchedule:
 
         self._add_game_for_team_in_week(new_game, home_team, which_week)
         self._add_game_for_team_in_week(new_game, away_team, which_week)
+
+        self._num_games += 1
 
         return new_game
 

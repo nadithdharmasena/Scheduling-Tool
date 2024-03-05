@@ -20,7 +20,7 @@ class Permit:
         self._assigned_game = None
 
     def __repr__(self):
-        return f"#{self.permit_number} -- {self.permit_id} {self.name}/{self.field}/{self.size} [{self.start_dt} - {self.end_dt}]"
+        return f"#{self.permit_number} -- {self.name}/{self.field}/{self.size} [{self.start_dt} - {self.end_dt}]"
 
     def is_available(self):
         return self._is_available

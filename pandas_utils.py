@@ -20,6 +20,7 @@ def extract_teams_from_file(file_path):
         # Extract strings from dataframe
         team_name = row['Team']
         division = row['Division']
+        address = row['Address']
 
         availability_str_list = [
             row['Sunday'],
@@ -44,7 +45,7 @@ def extract_teams_from_file(file_path):
         availability = [DailyAvailability.create_daily_availability(interval) for interval in avail_intervals]
         blackout_dates = parsers.parse_list_of_date_intervals_string(complete_exclusion_list)
 
-        new_team = Team(team_name, "", availability, blackout_dates)
+        new_team = Team(team_name, address, availability, blackout_dates)
 
         teams.append(new_team)
 
@@ -98,8 +99,7 @@ def create_permit_db_from_file(file_path, min_hours_of_availability=2):
 
 def dump_permit_db_to_csv(permit_db):
     permits = permit_db.get_all_permits()
-    dt_str = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    filename = f"permits/dumped_permits_{dt_str}.csv"
+    filename = f"dumped_permits/dumped_permits.csv"
 
     # Prepare data for DataFrame
     data = {
@@ -141,3 +141,69 @@ def dump_permit_db_to_csv(permit_db):
 
     # Write DataFrame to CSV with the given filename
     df.to_csv(filename, index=False)
+
+
+def dump_team_schedules_to_csv(schedule, teams, remaining_matchups):
+    for team in teams:
+        dump_team_schedule_to_csv(schedule, team)
+        dump_remaining_matchups_to_csv(schedule, team, remaining_matchups)
+
+
+def dump_remaining_matchups_to_csv(schedule, team, remaining_matchups):
+    filedir = f"schedules/{schedule.name}"
+    filename = f"{filedir}/{schedule.name}-{team.name}-remainders.csv"
+
+    data = {
+        "Home": [matchup[0] for matchup in remaining_matchups if team in matchup],
+        "Away": [matchup[1] for matchup in remaining_matchups if team in matchup],
+        "League Name": [schedule.name for matchup in remaining_matchups if team in matchup]
+    }
+
+    columns = ["Home", "Away", "League Name"]
+
+    df = pd.DataFrame(data, columns=columns)
+    df.to_csv(filename, index=False)
+
+
+def dump_team_schedule_to_csv(schedule, team):
+
+    filedir = f"schedules/{schedule.name}"
+    filename = f"{filedir}/{schedule.name}-{team.name}.csv"
+
+    data = {
+        "Date": [],
+        "Week": [],
+        "Home": [],
+        "Away": [],
+        "Start Time": [],
+        "End Time": [],
+        "Permit": [],
+        "League Name": []
+    }
+
+    games_for_team = schedule.get_schedule_for_team(team)
+    for week, game_list in games_for_team.items():
+        for game in game_list:
+            game_date_str = game.permit.start_dt.strftime('%m/%d/%Y')
+
+            data["Date"].append(game_date_str)
+            data["Week"].append(week)
+            data["Home"].append(game.home_team)
+            data["Away"].append(game.away_team)
+
+            start_time_str = game.permit.start_dt.strftime('%I:%M %p')
+            data["Start Time"].append(start_time_str)
+
+            end_time_str = game.permit.end_dt.strftime('%I:%M %p')
+            data["End Time"].append(end_time_str)
+
+            data["Permit"].append(str(game.permit))
+            data["League Name"].append(game.league_name)
+
+    columns = ["Date", "Week", "Home", "Away", "Start Time", "End Time", "Permit", "League Name"]
+
+    df = pd.DataFrame(data, columns=columns)
+
+    df.to_csv(filename, index=False)
+
+
