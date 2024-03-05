@@ -82,6 +82,4 @@ def main():
     print_execution_stats(permit_db)
 
 
-
-
 main()
