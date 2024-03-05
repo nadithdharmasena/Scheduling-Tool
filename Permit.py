@@ -1,9 +1,7 @@
-
 class Permit:
-
     current_id = 1
 
-    def __init__(self, name, field, size, start_dt, end_dt, permit_number, borough, map_location):
+    def __init__(self, name, field, size, start_dt, end_dt, permit_number, borough, map_location, assignment=None):
         self.permit_id = Permit.current_id
         Permit.current_id += 1
 
@@ -16,8 +14,12 @@ class Permit:
         self.borough = borough
         self.map_location = map_location
 
-        self._is_available = True
-        self._assigned_game = None
+        if assignment:
+            self._is_available = False
+        else:
+            self._is_available = True
+
+        self._assignment = assignment
 
     def __repr__(self):
         return f"#{self.permit_number} -- {self.name}/{self.field}/{self.size} [{self.start_dt} - {self.end_dt}]"
@@ -25,13 +27,13 @@ class Permit:
     def is_available(self):
         return self._is_available
 
-    def get_assigned_game(self):
-        return self._assigned_game
+    def get_assignment(self):
+        return self._assignment
 
     def reserve(self, game):
         if self.is_available():
             self._is_available = False
-            self._assigned_game = game
+            self._assignment = str(game)
             return
 
         raise ValueError("Permit has already been fully used.")
@@ -40,14 +42,16 @@ class Permit:
         return self.start_dt, self.end_dt
 
     @staticmethod
-    def generate_permits(name, field, size, start_dt, end_dt, permit_number, borough, map_location):
-        if size == 'L':
-            new_permit = Permit(name, field, size, start_dt, end_dt, permit_number, borough, map_location)
-            return [new_permit]
+    def generate_permits(name, field, size, start_dt, end_dt, permit_number, borough, map_location, assignment=None):
+        if size == 'M' or size == 'L':
+            return [
+                Permit(name, field, size, start_dt, end_dt, permit_number, borough, map_location, assignment)
+            ]
         elif size == 'XL':
-            first_new_permit = Permit(name, field, "L", start_dt, end_dt, permit_number, borough, map_location)
-            second_new_permit = Permit(name, field, "L", start_dt, end_dt, permit_number, borough, map_location)
-            return [first_new_permit, second_new_permit]
+            return [
+                Permit(name, field, "L", start_dt, end_dt, permit_number, borough, map_location, assignment)
+                for _ in range(2)
+            ]
 
         return []
 

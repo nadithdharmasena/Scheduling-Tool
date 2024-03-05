@@ -19,7 +19,7 @@ def main():
     # Set start/end dates of season
     season_start_date = date(2024, 3, 11)
     season_end_date = date(2024, 5, 10)
-    permit_db = pandas_utils.create_permit_db_from_file('permits/permits_2024.csv', Constants.game_length)
+    permit_db = pandas_utils.create_permit_db_from_file('permits/permits_2024.csv', Constants.min_permit_length)
 
     # Club GX division scheduling
     clubgx_teams = pandas_utils.extract_teams_from_file('team_info/clubgx.csv')

@@ -1,3 +1,5 @@
+import logging
+
 from Team import Team
 from DailyAvailability import DailyAvailability
 from PermitDB import PermitDB
@@ -73,8 +75,8 @@ def create_permit_db_from_file(file_path, min_hours_of_availability=2):
 
         # Ensures permits with prior commitments are not used
         field_assignment = row['Field Assigned to']
-        if not pd.isna(field_assignment):
-            continue
+        if pd.isna(field_assignment):
+            field_assignment = None
 
         active_date = parsers.parse_date_with_current_year(date_str)
         start_time = parsers.extract_time(start_time_str)
@@ -90,7 +92,8 @@ def create_permit_db_from_file(file_path, min_hours_of_availability=2):
                                               end_time_dt,
                                               permit_number,
                                               borough,
-                                              map_location)
+                                              map_location,
+                                              field_assignment)
         for permit in new_permits:
             permit_db.add_permit(permit, active_date)
 
@@ -112,7 +115,7 @@ def dump_permit_db_to_csv(permit_db):
         "Permit #": [permit.permit_number for permit in permits],
         "Borough": [permit.borough for permit in permits],
         "Map Location": [permit.map_location for permit in permits],
-        "Field Assigned to": [permit.get_assigned_game() for permit in permits]
+        "Field Assigned to": [permit.get_assignment() for permit in permits]
     }
 
     columns = ["Park",
